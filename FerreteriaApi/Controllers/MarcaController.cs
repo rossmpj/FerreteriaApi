@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FerreteriaApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace FerreteriaApi.Controllers
 {
@@ -18,6 +16,7 @@ namespace FerreteriaApi.Controllers
         {
             _context = context;
         }
+
         // GET: api/<MarcaController>
         [HttpGet]
         public async Task<IActionResult> GetMarcas()
@@ -37,34 +36,92 @@ namespace FerreteriaApi.Controllers
                 return BadRequest(e.Message);
             }
         }
-        /*public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }*/
 
         // GET api/<MarcaController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            try
+            {
+                var marca = await _context.Marcas.FindAsync(id);
+                if (marca == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    var query = await _context.Marcas
+                     .Select(z => new
+                     {
+                         z.IdMarca,
+                         z.Nombre
+                     }).Where(s => s.IdMarca == id).FirstAsync();
+                    return Ok(query);
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/<MarcaController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post([FromBody] Marca marca)
         {
+            try
+            {
+                _context.Add(marca);
+                await _context.SaveChangesAsync();
+                return Ok(marca);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // PUT api/<MarcaController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(int id, [FromBody] Marca marca)
         {
+            try
+            {
+                var registroMarca = await _context.Marcas.FindAsync(id);
+                if (marca == null)
+                {
+                    return NotFound();
+                }
+                registroMarca.Nombre = marca.Nombre;
+                _context.Marcas.Update(registroMarca);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "La marca se actualizó con éxito" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // DELETE api/<MarcaController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            try
+            {
+                var marca = await _context.Marcas.FindAsync(id);
+                if (marca == null)
+                {
+                    return NotFound();
+                }
+                _context.Marcas.Remove(marca);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "La marca se eliminó con éxito" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

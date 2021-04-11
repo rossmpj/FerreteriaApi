@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FerreteriaApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,12 +20,13 @@ namespace FerreteriaApi.Controllers
             _context = context;
         }
 
+        // GET: api/<ClienteController>
         [HttpGet]
         public async Task<IActionResult> GetClientes()
         {
             try
             {
-                var list_clientes = await _context.Clientes.ToListAsync();
+                var list_clientes = await _context.Clientes.Where(e => e.Estado == true).ToListAsync();
                 return Ok(list_clientes);
             }
             catch (Exception e)
@@ -32,36 +34,93 @@ namespace FerreteriaApi.Controllers
                 return BadRequest(e.Message);
             }
         }
-        // GET: api/<ClienteController>
-        /*[HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }*/
 
         // GET api/<ClienteController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(string id)
         {
-            return "value";
+            try
+            {
+                var cliente = await _context.Clientes.FindAsync(id);
+                if (cliente == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    var query = await _context.Clientes
+                     .Select(z => new
+                     {
+                         z.Cedula,
+                         z.Nombre,
+                         z.Apellido,
+                         z.Telefono
+                     }).Where(s => s.Cedula == id).FirstAsync();
+                    return Ok(query);
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/<ClienteController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post([FromBody] Cliente cliente)
         {
+            try
+            {
+                cliente.Estado = true;
+                _context.Add(cliente);
+                await _context.SaveChangesAsync();
+                return Ok(cliente);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // PUT api/<ClienteController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(string id, [FromBody] Cliente cliente)
         {
+            try
+            {
+                if (id != cliente.Cedula)
+                {
+                    return NotFound();
+                }
+                _context.Update(cliente);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "El cliente se actualizó con éxito" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // DELETE api/<ClienteController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
+            try
+            {
+                var cliente = await _context.Clientes.FindAsync(id);
+                if (cliente == null)
+                {
+                    return NotFound();
+                }
+                cliente.Estado = false;
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "El cliente se eliminó con éxito" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

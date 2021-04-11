@@ -1,14 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FerreteriaApi.Models;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace FerreteriaApi.Controllers
 {
-    
     [Route("api/[controller]")]
     [ApiController]
     public class ColorController : ControllerBase
@@ -18,7 +16,8 @@ namespace FerreteriaApi.Controllers
         {
             _context = context;
         }
-        // GET: ColorController
+
+        // GET: api/<ColorController>
         [HttpGet]
         public async Task<IActionResult> GetColores()
         {
@@ -29,7 +28,6 @@ namespace FerreteriaApi.Controllers
                     IdColor = p.IdColor,
                     Nombre = p.Nombre
                 }).ToListAsync();
-
                 return Ok(list_colores);
             }
             catch(Exception e)
@@ -37,78 +35,92 @@ namespace FerreteriaApi.Controllers
                 return BadRequest(e.Message);
             }
         }
-        /*public ActionResult Index()
-        {
-            return View();
-        }
 
-        // GET: ColorController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: ColorController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: ColorController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        [HttpGet("{id}")]
+        // GET: api/<ColorController>/5
+        public async Task<IActionResult> Get(int id)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                var color = await _context.Colores.FindAsync(id);
+                if (color == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    var query = await _context.Colores
+                     .Select(z => new
+                     {
+                         z.IdColor,
+                         z.Nombre
+                     }).Where(s => s.IdColor == id).FirstAsync();
+                    return Ok(query);
+                }
             }
-            catch
+            catch (Exception e)
             {
-                return View();
+                return BadRequest(e.Message);
             }
         }
 
-        // GET: ColorController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: ColorController/Edit/5
+        // POST api/<ColorController>
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Post([FromBody] Color color)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                _context.Add(color);
+                await _context.SaveChangesAsync();
+                return Ok(color);
             }
-            catch
+            catch (Exception e)
             {
-                return View();
+                return BadRequest(e.Message);
             }
         }
 
-        // GET: ColorController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: ColorController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        // PUT api/<ColorController>/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, [FromBody] Color color)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                var registroColor = await _context.Colores.FindAsync(id);
+                if (color == null)
+                {
+                    return NotFound();
+                }
+                registroColor.Nombre = color.Nombre;
+                _context.Colores.Update(registroColor);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "El color se actualizó con éxito" });
             }
-            catch
+            catch (Exception e)
             {
-                return View();
+                return BadRequest(e.Message);
             }
-        }*/
+        }
+
+        // DELETE api/<ColorController>/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var color = await _context.Colores.FindAsync(id);
+                if (color == null)
+                {
+                    return NotFound();
+                }
+                _context.Colores.Remove(color);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "El color se eliminó con éxito" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

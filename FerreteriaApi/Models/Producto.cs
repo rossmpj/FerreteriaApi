@@ -16,6 +16,7 @@ namespace FerreteriaApi.Models
         public string Medida { get; set; }
         public string Imagen { get; set; }
         public int Stock { get; set; }
+        public bool Estado { get; set; }
         public int IdColor { get; set; }
         public int IdCategoria { get; set; }
         public int IdMarca { get; set; }

@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FerreteriaApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace FerreteriaApi.Controllers
 {
@@ -18,7 +16,8 @@ namespace FerreteriaApi.Controllers
         {
             _context = context;
         }
-        // GET: api/<ValuesController>
+
+        // GET: api/<CategoriaController>
         [HttpGet]
         public async Task<IActionResult> GetCategorias()
         {
@@ -27,9 +26,9 @@ namespace FerreteriaApi.Controllers
                 var list_categorias = await _context.Categorias.Select(p => new
                 {
                     IdCategoria = p.IdCategoria,
-                    Nombre = p.Nombre
+                    Nombre = p.Nombre,
+                    Descripcion = p.Descripcion
                 }).ToListAsync();
-
                 return Ok(list_categorias);
             }
             catch (Exception e)
@@ -37,34 +36,94 @@ namespace FerreteriaApi.Controllers
                 return BadRequest(e.Message);
             }
         }
-        /*public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }*/
 
-        // GET api/<ValuesController>/5
+        // GET api/<CategoriaController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            try
+            {
+                var categoria = await _context.Categorias.FindAsync(id);
+                if (categoria == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    var query = await _context.Categorias
+                     .Select(z => new
+                     {
+                         z.IdCategoria,
+                         z.Nombre,
+                         z.Descripcion
+                     }).Where(s => s.IdCategoria == id).FirstAsync();
+                    return Ok(query);
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
-        // POST api/<ValuesController>
+        // POST api/<CategoriaController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post([FromBody] Categoria categoria)
         {
+            try
+            {
+                _context.Add(categoria);
+                await _context.SaveChangesAsync();
+                return Ok(categoria);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
-        // PUT api/<ValuesController>/5
+        // PUT api/<CategoriaController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(int id, [FromBody] Categoria categoria)
         {
+            try
+            {
+                var registroCategoria = await _context.Categorias.FindAsync(id);
+                if (categoria == null)
+                {
+                    return NotFound();
+                }
+                registroCategoria.Nombre = categoria.Nombre;
+                registroCategoria.Descripcion = categoria.Descripcion;
+                _context.Categorias.Update(registroCategoria);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "La categoría se actualizó con éxito" });
+            } 
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
-        // DELETE api/<ValuesController>/5
+        // DELETE api/<CategoriaController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            try
+            {
+                var categoria = await _context.Categorias.FindAsync(id);
+                if (categoria == null)
+                {
+                    return NotFound();
+                }
+                _context.Categorias.Remove(categoria);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "La categoría se eliminó con éxito" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }
